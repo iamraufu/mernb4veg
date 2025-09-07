@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My First Full Stack Website</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@100..900&family=Open+Sans:ital@0;1&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4" defer></script>
+    <style>
+        * {
+            font-family: "Noto Sans Bengali", sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-[#1f4287] text-white min-h-screen">
+    <h1 class="text-center pt-5 text-2xl">আমাদের দোকানে আপনাকে স্বাগতম</h1>
+
+    <div class="overflow-x-auto rounded-box border border-base-content/5">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th class="text-white">সবজির নাম</th>
+                    <th class="text-white">সবজির দাম</th>
+                    <th class="text-white">সবজির সংখ্যা</th>
+                </tr>
+            </thead>
+            <tbody id="vegetables">
+            </tbody>
+        </table>
+    </div>
+
+    <div id="update" class="my-5 bg-[#071e3d] shadow-md hidden">
+        <h2 class="text-center pt-5 text-lg">সবজির তথ্য হালনাগাদ করুন<button class="btn btn-active btn-error ms-2" onclick="document.getElementById('update').style.display = 'none'">বন্ধ করুন</button></h2>
+        <div class="p-5 bg-[#278ea5] w-50 text-white mx-auto rounded-md my-2 shadow-lg">
+            <p id="selectedVegInfo"></p>
+        </div>
+        <div id="updateVegInfo" class="p-10"></div>
+    </div>
+
+    <div class="my-5">
+        <form action="/addVeg" class="m-5" method="post">
+            <input type="text" name="name" placeholder="সবজির নাম" class="input bg-[#071e3d]" />
+            <input type="number" name="price" placeholder="সবজির দাম" class="input bg-[#071e3d] ms-5" />
+            <input type="number" name="quantity" placeholder="সবজির সংখ্যা" class="input bg-[#071e3d] mx-5" />
+            <button class="btn btn-success">সবজি তৈরী করুন</button>
+        </form>
+    </div>
+
+    <script>
+        function fetchVeg() {
+            fetch('/vegetables')
+                .then(res => res.json())
+                .then(vegetables => {
+                    const tbody = document.getElementById('vegetables')
+                    tbody.innerHTML = ``
+                    vegetables.forEach((veg, index) => {
+                        const tr = document.createElement('tr')
+                        const td1 = document.createElement('td')
+                        const td2 = document.createElement('td')
+                        const td3 = document.createElement('td')
+                        const td4 = document.createElement('td')
+                        const td5 = document.createElement('td')
+                        td1.innerHTML = `${index+1}`
+                        td2.innerHTML = `${veg.name}`
+                        td3.innerHTML = `${veg.price}`
+                        td4.innerHTML = `${veg.quantity}`
+                        td5.innerHTML = `<button onclick="getVegById('${veg._id}')" class="ms-5 btn btn-active btn-info">পরিবর্তন</button> <button onclick="deleteVeg(event, '${veg._id}')" class="btn btn-active btn-error">মুছে ফেলুন</button>`
+
+                        tbody.appendChild(tr)
+                        tr.appendChild(td1)
+                        tr.appendChild(td2)
+                        tr.appendChild(td3)
+                        tr.appendChild(td4)
+                        tr.appendChild(td5)
+                    });
+                })
+        }
+        fetchVeg()
+
+        function getVegById(vegId) {
+            const div = document.getElementById('update')
+            const p = document.getElementById('selectedVegInfo')
+            const updateVegInfoDiv = document.getElementById('updateVegInfo')
+
+            fetch(`/vegetables/${vegId}`)
+                .then(res => res.json())
+                .then(vegetable => {
+                    if (vegetable) {
+                        div.style.display = 'block'
+                        p.innerText = `সবজির নাম: ${vegetable.name} সবজির দাম: ${vegetable.price} সবজির সংখ্যা: ${vegetable.quantity}`
+                        updateVegInfoDiv.innerHTML = `
+                        <input type="text" id="name" value="${vegetable.name}" placeholder="সবজির নাম" class="input bg-[#364f6b]" />
+                        <input type="number" id="price" value="${vegetable.price}" placeholder="সবজির দাম" class="input bg-[#364f6b] ms-5" />
+                        <input type="number" id="quantity" value="${vegetable.quantity}" placeholder="সবজির সংখ্যা" class="input bg-[#364f6b] mx-5" />
+                        <button class="btn btn-neutral" onclick="updateVeg('${vegetable._id}')">সবজি তথ্য পরিবর্তন করুন</button>
+                        `
+                    }
+                })
+
+        }
+
+        function updateVeg(vegId) {
+            console.log(vegId)
+            const name = document.getElementById('name').value
+            const price = document.getElementById('price').value
+            const quantity = document.getElementById('quantity').value
+
+            const vegetable = {
+                name,
+                price,
+                quantity
+            }
+
+            fetch(`/vegetable/${vegId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(vegetable)
+                })
+                .then(res => res.json())
+                .then(result => {
+                    if (result) {
+                        document.getElementById('update').style.display = 'none'
+                        fetchVeg()
+                    }
+                })
+        }
+
+        function deleteVeg(event, vegId) {
+
+            fetch(`/vegetable/${vegId}`, {
+                    method: 'DELETE'
+                })
+                .then(res => res.json())
+                .then(result => {
+                    if (result) {
+                        event.target.parentNode.parentNode.style.display = 'none'
+                    }
+                })
+        }
+    </script>
+</body>
+
+</html>

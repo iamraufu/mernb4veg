@@ -1,0 +1,22 @@
+{
+    "name": "sheba.xyz-backend",
+    "version": "1.0.0",
+    "description": "backend server of sheba",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "dev": "nodemon index.js"
+    },
+    "author": "eftykhar",
+    "license": "ISC",
+    "devDependencies": {
+        "nodemon": "^3.1.10"
+    },
+    "dependencies": {
+        "body-parser": "^2.2.0",
+        "cors": "^2.8.5",
+        "dotenv": "^17.2.1",
+        "express": "^5.1.0",
+        "mongodb": "^4.9.1"
+    }
+}
